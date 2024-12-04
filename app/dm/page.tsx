@@ -6,7 +6,8 @@ import Region from "@/types/region"
 import World from "@/types/world"
 import { NearMe, Public, Tv } from "@mui/icons-material"
 import { CircularProgress } from "@mui/material"
-import { useEffect, useState } from "react"
+import Image from "next/image"
+import { useEffect, useRef, useState } from "react"
 import io, { Socket } from "socket.io-client"
 
 export default function DM() {
@@ -23,10 +24,59 @@ export default function DM() {
     const [regions, setRegions] = useState<Region[]>()
     const [creatures, setCreatures] = useState<Creature[]>()
 
+    const [map_image_dimensions, setMapImageDimensions] = useState<{ width: number; height: number }>()
+    const [canvas_parameters, setCanvasParameters] = useState<{
+        x_origin: number
+        y_origin: number
+        x_scale: number
+        y_scale: number
+    }>()
+
+    const canvas_ref = useRef<HTMLDivElement>(null)
+
     const selected_world = selected_world_id ? available_worlds?.find((w) => w.id == selected_world_id) : undefined
     const selected_region = selected_region_id ? regions?.find((r) => r.id == selected_region_id) : undefined
+    const present_creatures = creatures?.filter((c) => c.current_region == selected_region_id)
 
     const region_image = selected_region?.states[selected_region.current_state].image
+
+    const mapCoordsToCanvas = (x: number, y: number) => {
+        if (!canvas_parameters || !region_image) {
+            return { x: 0, y: 0 }
+        }
+        const { x_origin, y_origin, x_scale, y_scale } = canvas_parameters
+
+        return {
+            x: x_origin + (x - region_image.top_left_corner[0]) * x_scale,
+            y: y_origin + (y - region_image.top_left_corner[1]) * y_scale,
+        }
+    }
+
+    useEffect(() => {
+        if (canvas_ref.current && map_image_dimensions && region_image) {
+            const image_scale_factor = Math.min(
+                canvas_ref.current.clientWidth / map_image_dimensions.width,
+                canvas_ref.current.clientHeight / map_image_dimensions.height
+            )
+            const actual_width = map_image_dimensions.width * image_scale_factor
+            const actual_height = map_image_dimensions.height * image_scale_factor
+            const actual_origin_x = (canvas_ref.current.clientWidth - actual_width) / 2
+            const actual_origin_y = (canvas_ref.current.clientHeight - actual_height) / 2
+
+            const x_scale_factor = actual_width / region_image.width
+            const y_scale_factor = actual_height / region_image.height
+
+            console.log("Actual origin", actual_origin_x, actual_origin_y)
+            console.log("Scale factors", x_scale_factor, y_scale_factor)
+
+            setCanvasParameters({
+                x_origin: actual_origin_x,
+                y_origin: actual_origin_y,
+                x_scale: x_scale_factor,
+                y_scale: y_scale_factor,
+            })
+        }
+    }, [map_image_dimensions, region_image])
 
     useEffect(() => {
         if (admin_password === undefined) {
@@ -206,17 +256,40 @@ export default function DM() {
                                 ))}
                             </ul>
                         </nav>
-                        <main className="canvas h-full w-full"></main>
-                        {/* {current_image && (
-                            <Image
-                                ref={image_ref}
-                                src={`${process.env.NEXT_PUBLIC_API_URL}/images/${current_image.path}`}
-                                alt="map"
-                                objectFit="contain"
-                                layout="fill"
-                                unoptimized
-                            />
-                        )} */}
+                        <main className="overflow-hidden w-full h-full" ref={canvas_ref}>
+                            {region_image && (
+                                <Image
+                                    src={`${process.env.NEXT_PUBLIC_API_URL}/images/${region_image.path}`}
+                                    alt="map"
+                                    objectFit="contain"
+                                    layout="fill"
+                                    unoptimized
+                                    onLoadingComplete={(img) => {
+                                        setMapImageDimensions({ width: img.naturalWidth, height: img.naturalHeight })
+                                    }}
+                                />
+                            )}
+                            {canvas_parameters &&
+                                present_creatures &&
+                                region_image &&
+                                present_creatures?.map((creature) => {
+                                    const { x, y } = mapCoordsToCanvas(creature.position[0], creature.position[1])
+                                    return (
+                                        <div
+                                            key={creature.id}
+                                            style={{
+                                                position: "absolute",
+                                                top: y,
+                                                left: x,
+                                                width: 20,
+                                                height: 20,
+                                                backgroundColor: "red",
+                                                transform: `translate(${creature.position[0]}px, ${creature.position[1]}px)`,
+                                            }}
+                                        ></div>
+                                    )
+                                })}
+                        </main>
                     </main>
                     <ConnectedDisplays count={connected_displays} />
                 </div>
