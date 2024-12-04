@@ -1,4 +1,5 @@
 "use client"
+import ToggleableButton from "@/components/toggleable_button"
 import WideButton from "@/components/wide_button"
 import Creature from "@/types/creature"
 import Region from "@/types/region"
@@ -18,10 +19,14 @@ export default function DM() {
 
     const [available_worlds, setAvailableWorlds] = useState<World[]>()
     const [selected_world_id, setSelectedWorldId] = useState<string>()
+    const [selected_region_id, setSelectedRegionId] = useState<string>()
     const [regions, setRegions] = useState<Region[]>()
     const [creatures, setCreatures] = useState<Creature[]>()
 
     const selected_world = selected_world_id ? available_worlds?.find((w) => w.id == selected_world_id) : undefined
+    const selected_region = selected_region_id ? regions?.find((r) => r.id == selected_region_id) : undefined
+
+    const region_image = selected_region?.states[selected_region.current_state].image
 
     useEffect(() => {
         if (admin_password === undefined) {
@@ -164,32 +169,54 @@ export default function DM() {
                         <ul className="flex flex-row gap-2 justify-center items-center">
                             {available_worlds?.map((w) => (
                                 <li key={w.id}>
-                                    <WorldButton
+                                    <ToggleableButton
                                         onClick={() => socket.emit("change_world", w.id)}
                                         selected={w.id == selected_world?.id}
-                                        world={w}
-                                    />
+                                    >
+                                        {w.name}
+                                    </ToggleableButton>
                                 </li>
                             ))}
                         </ul>
                     </header>
-                    <main className="relative w-full">
-                        <nav className="absolute top-0 left-0 bg-gray-200 shadow-lg flex flex-col gap-2 p-4 m-4 rounded-2xl inset-y-0">
+                    <main className="relative w-full overflow-hidden">
+                        <nav className="absolute top-0 left-0 bg-gray-200 shadow-lg flex flex-col gap-2 p-4 m-4 rounded-2xl inset-y-0 z-50">
                             <h2 className="font-bold w-full text-center">Regions</h2>
                             <ul className="flex flex-col gap-2">
                                 {regions?.map((region) => (
-                                    <li key={region.id} className="flex flex-row justify-between gap-1">
-                                        <WideButton className="text-start text-sm">{region.name}</WideButton>
-                                        <GoToButton
+                                    <li key={region.id} className="flex flex-row justify-between gap-2">
+                                        <ToggleableButton
+                                            onClick={() => {
+                                                setSelectedRegionId(region.id)
+                                            }}
+                                            selected={selected_region_id == region.id}
+                                        >
+                                            {region.name}
+                                        </ToggleableButton>
+                                        <ToggleableButton
                                             selected={selected_world?.current_region == region.id}
                                             onClick={() => {
                                                 socket.emit("change_region", region.id)
                                             }}
-                                        />
+                                            className="!px-2"
+                                        >
+                                            <NearMe sx={{ fontSize: 16 }} />
+                                        </ToggleableButton>
                                     </li>
                                 ))}
                             </ul>
                         </nav>
+                        <main className="canvas h-full w-full"></main>
+                        {/* {current_image && (
+                            <Image
+                                ref={image_ref}
+                                src={`${process.env.NEXT_PUBLIC_API_URL}/images/${current_image.path}`}
+                                alt="map"
+                                objectFit="contain"
+                                layout="fill"
+                                unoptimized
+                            />
+                        )} */}
                     </main>
                     <ConnectedDisplays count={connected_displays} />
                 </div>
@@ -202,39 +229,7 @@ function ConnectedDisplays({ count }: { count: number }) {
     return (
         <div className="flex flex-row gap-1 items-center justify-center rounded-full bg-white absolute bottom-5 right-5 p-4 shadow-lg">
             <Tv />
-            <p>{count}</p>
+            <p className="font-bold">{count}</p>
         </div>
-    )
-}
-
-function GoToButton({ onClick, selected }: { onClick?: () => void; selected?: boolean }) {
-    const baseClassName = "border px-2 py-1 rounded-full shadow-lg font-bold hover:shadow-md "
-    return (
-        <button
-            onClick={selected ? () => {} : onClick}
-            className={
-                selected
-                    ? `${baseClassName} bg-blue-500 border-blue-500 text-white hover:text-white cursor-default`
-                    : `${baseClassName} bg-white border-white hover:border-blue-500 hover:text-blue cursor:pointer`
-            }
-        >
-            <NearMe />
-        </button>
-    )
-}
-
-function WorldButton({ world, onClick, selected }: { world: World; onClick: () => void; selected: boolean }) {
-    const baseClassName = "border px-4 py-1 rounded-full shadow-lg font-bold text-sm hover:shadow-md "
-    return (
-        <button
-            onClick={onClick}
-            className={
-                selected
-                    ? `${baseClassName} bg-blue-500 border-blue-500 text-white hover:text-white cursor-default`
-                    : `${baseClassName} bg-white border-white hover:border-blue-500 hover:text-blue cursor:pointer`
-            }
-        >
-            {world.name}
-        </button>
     )
 }

@@ -11,6 +11,7 @@ interface RegionImage {
     width: number
     height: number
 }
+
 interface RegionState {
     image: RegionImage
 }
