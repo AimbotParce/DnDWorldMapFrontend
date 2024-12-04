@@ -166,7 +166,7 @@ export default function DM() {
                                 <li key={w.id}>
                                     <WorldButton
                                         onClick={() => socket.emit("change_world", w.id)}
-                                        selected={w.id == selected_world.id}
+                                        selected={w.id == selected_world?.id}
                                         world={w}
                                     />
                                 </li>
