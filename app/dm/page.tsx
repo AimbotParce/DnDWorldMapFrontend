@@ -135,16 +135,27 @@ export default function DM() {
                 <div className="flex flex-col gap-2">
                     <h1 className="font-bold text-3xl">Welcome, Dungeon Master!</h1>
                     <hr className="border-t-1 border-gray-800" />
-                    <p className="font-bold">Select a world to navigate to:</p>
-                    <ul>
-                        {available_worlds?.map((world) => (
-                            <li key={world.id}>
-                                <WideButton onClick={() => socket.emit("change_world", world.id)}>
-                                    {world.name}
-                                </WideButton>
-                            </li>
-                        ))}
-                    </ul>
+                    {available_worlds === undefined ? (
+                        <div className="flex items-center gap-2">
+                            <p className="text-sm">Loading Worlds</p>
+                            <CircularProgress size={20} />
+                        </div>
+                    ) : available_worlds.length === 0 ? (
+                        <p>No worlds available</p>
+                    ) : (
+                        <>
+                            <p className="font-bold">Select a world to navigate to:</p>
+                            <ul>
+                                {available_worlds?.map((world) => (
+                                    <li key={world.id}>
+                                        <WideButton onClick={() => socket.emit("change_world", world.id)}>
+                                            {world.name}
+                                        </WideButton>
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    )}
                 </div>
             ) : (
                 <div className="grid grid-rows-[40px_1fr] h-screen w-screen">
