@@ -45,7 +45,7 @@ export default function DM() {
             setSocketConnected(true)
         })
 
-        new_socket.on("update_display_count", (count: number) => {
+        new_socket.on("update_display_counter", (count: number) => {
             console.log(`Display count: ${count}`)
             setConnectedDisplays(count)
         })
