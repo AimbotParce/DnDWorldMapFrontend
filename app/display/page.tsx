@@ -12,10 +12,6 @@ export default function Display() {
             setSocketConnected(false)
         })
 
-        socket.on("connect_error", () => {
-            setSocketConnected(false)
-        })
-
         // Connect to the server when the component mounts
         socket.on("connected", () => {
             setSocketConnected(true)

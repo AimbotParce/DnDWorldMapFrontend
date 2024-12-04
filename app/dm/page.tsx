@@ -32,13 +32,6 @@ export default function DM() {
             setSocketConnected(false)
         })
 
-        new_socket.on("connect_error", () => {
-            console.log("Connection error")
-            setSocketError(true)
-            setAdminPassword(undefined)
-            setSocketConnected(false)
-        })
-
         // Connect to the server when the component mounts
         new_socket.on("connected", () => {
             console.log("Socket connected")
