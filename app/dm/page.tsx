@@ -10,6 +10,7 @@ export default function DM() {
     const [socket, setSocket] = useState<Socket>()
     const [socket_connected, setSocketConnected] = useState<boolean>(false)
     const [socket_error, setSocketError] = useState<boolean>(false)
+    const [connected_displays, setConnectedDisplays] = useState<number>(0)
 
     useEffect(() => {
         if (admin_password === undefined) {
@@ -46,6 +47,7 @@ export default function DM() {
 
         new_socket.on("update_display_count", (count: number) => {
             console.log(`Display count: ${count}`)
+            setConnectedDisplays(count)
         })
 
         setSocket(new_socket)
@@ -108,6 +110,7 @@ export default function DM() {
             ) : (
                 <div className="flex flex-col gap-2">
                     <h1 className="font-bold text-3xl">Welcome, Dungeon Master!</h1>
+                    <p>There are currently {connected_displays} displays connected.</p>
                 </div>
             )}
         </main>
