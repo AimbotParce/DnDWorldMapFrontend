@@ -2,39 +2,46 @@
 import WideButton from "@/components/wide_button"
 import { CircularProgress } from "@mui/material"
 import { useEffect, useState } from "react"
-import { io, Socket } from "socket.io-client"
+import io, { Socket } from "socket.io-client"
 
 export default function DM() {
     const [admin_password, setAdminPassword] = useState<string>()
     const [_admin_password_entry, setAdminPasswordEntry] = useState<string>("")
     const [socket, setSocket] = useState<Socket>()
+    const [socket_connected, setSocketConnected] = useState<boolean>(false)
     const [socket_error, setSocketError] = useState<boolean>(false)
 
     useEffect(() => {
         if (admin_password === undefined) {
             return
         }
+
         const new_socket = io(`${process.env.NEXT_PUBLIC_API_URL}/dm`, {
             extraHeaders: {
                 Authorization: admin_password,
             },
+            // transports: ["websocket"],
         })
 
         new_socket.on("disconnect", () => {
             console.log("Socket disconnected")
             // Reset the admin password when the connection is lost (or if it was incorrect)
             setAdminPassword(undefined)
+            setSocket(undefined)
+            setSocketConnected(false)
         })
 
         new_socket.on("connect_error", () => {
             console.log("Connection error")
             setSocketError(true)
             setAdminPassword(undefined)
+            setSocketConnected(false)
         })
 
         // Connect to the server when the component mounts
         new_socket.on("connected", () => {
-            console.log("Connected to Socket.IO server")
+            console.log("Socket connected")
+            setSocketConnected(true)
         })
 
         new_socket.on("update_display_count", (count: number) => {
@@ -93,7 +100,7 @@ export default function DM() {
                         Access
                     </button>
                 </form>
-            ) : socket === undefined || !socket.connected ? (
+            ) : socket === undefined || !socket_connected ? (
                 <div className="flex flex-row gap-2 justify-center items-center">
                     <h1 className="font-bold">Connecting</h1>
                     <CircularProgress size={20} />
