@@ -9,6 +9,7 @@ interface RegionImage {
     path: string
     top_left_corner: Point2D
     width: number
+    height: number
 }
 interface RegionState {
     image: RegionImage

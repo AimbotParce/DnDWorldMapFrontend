@@ -1,10 +1,9 @@
 "use client"
-import SmallButton from "@/components/small_button"
 import WideButton from "@/components/wide_button"
 import Creature from "@/types/creature"
 import Region from "@/types/region"
 import World from "@/types/world"
-import { Tv } from "@mui/icons-material"
+import { NearMe, Public, Tv } from "@mui/icons-material"
 import { CircularProgress } from "@mui/material"
 import { useEffect, useState } from "react"
 import io, { Socket } from "socket.io-client"
@@ -20,6 +19,7 @@ export default function DM() {
     const [available_worlds, setAvailableWorlds] = useState<World[]>()
     const [world, setWorld] = useState<World>()
     const [regions, setRegions] = useState<Region[]>()
+    const [region_tree, setRegionTree] = useState<RegionTree>()
     const [creatures, setCreatures] = useState<Creature[]>()
 
     useEffect(() => {
@@ -147,21 +147,39 @@ export default function DM() {
                 </div>
             ) : (
                 <div className="grid grid-rows-[40px_1fr] h-screen w-screen">
-                    <header className="bg-gray-200 shadow-lg flex flex-row px-20 items-center">
+                    <header className="bg-gray-200 shadow-lg flex flex-row gap-4 px-20 items-center">
+                        <Public className="text-gray-500" />
                         <ul className="flex flex-row gap-2 justify-center items-center">
                             {available_worlds?.map((w) => (
                                 <li key={w.id}>
-                                    <SmallButton
+                                    <WorldButton
                                         onClick={() => socket.emit("change_world", w.id)}
-                                        className={w.id == world.id ? "bg-blue-500" : ""}
-                                    >
-                                        {w.name}
-                                    </SmallButton>
+                                        selected={w.id == world.id}
+                                        world={w}
+                                    />
                                 </li>
                             ))}
                         </ul>
                     </header>
-                    <main></main>
+                    <main className="grid grid-cols-[250px_1fr]">
+                        <nav className="bg-gray-200 shadow-lg flex flex-col gap-2 p-4 m-4 rounded-2xl">
+                            <h2 className="font-bold w-full text-center">Regions</h2>
+                            <ul className="flex flex-col gap-2">
+                                {regions?.map((region) => (
+                                    <li key={region.id} className="flex flex-row justify-between gap-1">
+                                        <WideButton className="text-start text-sm">{region.name}</WideButton>
+                                        <GoToButton
+                                            selected={world.current_region == region.id}
+                                            onClick={() => {
+                                                socket.emit("change_region", region.id)
+                                            }}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        </nav>
+                        <div></div>
+                    </main>
                     <ConnectedDisplays count={connected_displays} />
                 </div>
             )}
@@ -175,5 +193,37 @@ function ConnectedDisplays({ count }: { count: number }) {
             <Tv />
             <p>{count}</p>
         </div>
+    )
+}
+
+function GoToButton({ onClick, selected }: { onClick?: () => void; selected?: boolean }) {
+    const baseClassName = "border px-2 py-1 rounded-full shadow-lg font-bold hover:shadow-md "
+    return (
+        <button
+            onClick={selected ? () => {} : onClick}
+            className={
+                selected
+                    ? `${baseClassName} bg-blue-500 border-blue-500 text-white hover:text-white cursor-default`
+                    : `${baseClassName} bg-white border-white hover:border-blue-500 hover:text-blue cursor:pointer`
+            }
+        >
+            <NearMe />
+        </button>
+    )
+}
+
+function WorldButton({ world, onClick, selected }: { world: World; onClick: () => void; selected: boolean }) {
+    const baseClassName = "border px-4 py-1 rounded-full shadow-lg font-bold text-sm hover:shadow-md "
+    return (
+        <button
+            onClick={onClick}
+            className={
+                selected
+                    ? `${baseClassName} bg-blue-500 border-blue-500 text-white hover:text-white cursor-default`
+                    : `${baseClassName} bg-white border-white hover:border-blue-500 hover:text-blue cursor:pointer`
+            }
+        >
+            {world.name}
+        </button>
     )
 }
