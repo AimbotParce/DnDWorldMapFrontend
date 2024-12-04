@@ -17,10 +17,11 @@ export default function DM() {
     const [connected_displays, setConnectedDisplays] = useState<number>(0)
 
     const [available_worlds, setAvailableWorlds] = useState<World[]>()
-    const [world, setWorld] = useState<World>()
+    const [selected_world_id, setSelectedWorldId] = useState<string>()
     const [regions, setRegions] = useState<Region[]>()
-    const [region_tree, setRegionTree] = useState<RegionTree>()
     const [creatures, setCreatures] = useState<Creature[]>()
+
+    const selected_world = selected_world_id ? available_worlds?.find((w) => w.id == selected_world_id) : undefined
 
     useEffect(() => {
         if (admin_password === undefined) {
@@ -53,9 +54,9 @@ export default function DM() {
             setConnectedDisplays(count)
         })
 
-        new_socket.on("change_world", (new_world: World) => {
-            console.log(`World changed: ${new_world.name}`)
-            setWorld(new_world)
+        new_socket.on("change_world", (new_world: string) => {
+            console.log(`World changed: ${new_world}`)
+            setSelectedWorldId(new_world)
         })
 
         new_socket.on("update_worlds", (new_worlds: World[]) => {
@@ -91,7 +92,7 @@ export default function DM() {
     }
 
     return (
-        <main className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <main className="flex flex-col items-center justify-center min-h-screen bg-gray-100 ">
             {socket_error ? (
                 <div className="flex flex-col gap-2 justify-center items-center">
                     <h1 className="font-bold">Failed to connect</h1>
@@ -130,7 +131,7 @@ export default function DM() {
                     <h1 className="font-bold">Connecting</h1>
                     <CircularProgress size={20} />
                 </div>
-            ) : world === undefined ? (
+            ) : selected_world_id === undefined ? (
                 <div className="flex flex-col gap-2">
                     <h1 className="font-bold text-3xl">Welcome, Dungeon Master!</h1>
                     <hr className="border-t-1 border-gray-800" />
@@ -147,29 +148,29 @@ export default function DM() {
                 </div>
             ) : (
                 <div className="grid grid-rows-[40px_1fr] h-screen w-screen">
-                    <header className="bg-gray-200 shadow-lg flex flex-row gap-4 px-20 items-center">
+                    <header className="bg-gray-200 shadow-lg flex flex-row gap-4 px-20 items-center ">
                         <Public className="text-gray-500" />
                         <ul className="flex flex-row gap-2 justify-center items-center">
                             {available_worlds?.map((w) => (
                                 <li key={w.id}>
                                     <WorldButton
                                         onClick={() => socket.emit("change_world", w.id)}
-                                        selected={w.id == world.id}
+                                        selected={w.id == selected_world.id}
                                         world={w}
                                     />
                                 </li>
                             ))}
                         </ul>
                     </header>
-                    <main className="grid grid-cols-[250px_1fr]">
-                        <nav className="bg-gray-200 shadow-lg flex flex-col gap-2 p-4 m-4 rounded-2xl">
+                    <main className="relative w-full">
+                        <nav className="absolute top-0 left-0 bg-gray-200 shadow-lg flex flex-col gap-2 p-4 m-4 rounded-2xl inset-y-0">
                             <h2 className="font-bold w-full text-center">Regions</h2>
                             <ul className="flex flex-col gap-2">
                                 {regions?.map((region) => (
                                     <li key={region.id} className="flex flex-row justify-between gap-1">
                                         <WideButton className="text-start text-sm">{region.name}</WideButton>
                                         <GoToButton
-                                            selected={world.current_region == region.id}
+                                            selected={selected_world?.current_region == region.id}
                                             onClick={() => {
                                                 socket.emit("change_region", region.id)
                                             }}
@@ -178,7 +179,6 @@ export default function DM() {
                                 ))}
                             </ul>
                         </nav>
-                        <div></div>
                     </main>
                     <ConnectedDisplays count={connected_displays} />
                 </div>
