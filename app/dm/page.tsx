@@ -7,6 +7,7 @@ import Species from "@/types/species"
 import World from "@/types/world"
 import { NearMe, Public, Tv } from "@mui/icons-material"
 import { CircularProgress } from "@mui/material"
+import { motion } from "framer-motion"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import io, { Socket } from "socket.io-client"
@@ -290,7 +291,7 @@ export default function DM() {
                                     const image_height = state ? state.height : 1
 
                                     return (
-                                        <button
+                                        <motion.button
                                             key={creature.id}
                                             style={{
                                                 position: "absolute",
@@ -299,6 +300,8 @@ export default function DM() {
                                                 width: image_width * canvas_parameters.x_scale,
                                                 height: image_height * canvas_parameters.y_scale,
                                             }}
+                                            onDrag={() => {}} // Add drag functionality
+                                            onClick={() => {}} // Add click functionality
                                             className=" rounded-lg shadow-[inset_3px_3px_3px_3px_rgba(0,0,0,0.3),inset_-3px_-3px_3px_3px_rgba(255,255,255,0.3),-3px_-3px_3px_3px_rgba(255,255,255,0.1)] backdrop-blur-[1px] backdrop-filter"
                                         >
                                             <Image
@@ -308,7 +311,7 @@ export default function DM() {
                                                 alt="creature"
                                                 unoptimized
                                             />
-                                        </button>
+                                        </motion.button>
                                     )
                                 })}
                         </main>
