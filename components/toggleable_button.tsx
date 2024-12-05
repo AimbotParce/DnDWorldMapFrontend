@@ -1,5 +1,5 @@
 interface ToggleableButtonProps extends React.BaseHTMLAttributes<HTMLButtonElement> {
-    selected: boolean
+    selected?: boolean
 }
 
 function ToggleableButton(props: ToggleableButtonProps) {

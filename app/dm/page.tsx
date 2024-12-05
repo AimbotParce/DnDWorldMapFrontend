@@ -5,7 +5,17 @@ import Creature from "@/types/creature"
 import Region from "@/types/region"
 import Species from "@/types/species"
 import World from "@/types/world"
-import { NearMe, Public, Tv } from "@mui/icons-material"
+import {
+    Close,
+    LocationDisabled,
+    LocationSearching,
+    MyLocation,
+    NearMe,
+    Pets,
+    Place,
+    Public,
+    Tv,
+} from "@mui/icons-material"
 import { CircularProgress } from "@mui/material"
 import { motion } from "framer-motion"
 import Image from "next/image"
@@ -20,12 +30,17 @@ export default function DM() {
     const [socket_error, setSocketError] = useState<boolean>(false)
     const [connected_displays, setConnectedDisplays] = useState<number>(0)
 
+    const [win_region, setWinRegion] = useState<boolean>(true)
+    const [win_creatures, setWinCreatures] = useState<boolean>(true)
+
     const [available_worlds, setAvailableWorlds] = useState<World[]>()
     const [selected_world_id, setSelectedWorldId] = useState<string>()
     const [selected_region_id, setSelectedRegionId] = useState<string>()
     const [regions, setRegions] = useState<Region[]>()
     const [creatures, setCreatures] = useState<Creature[]>()
     const [species, setSpecies] = useState<Species[]>()
+
+    const [selected_creature_id, setSelectedCreature] = useState<string>()
 
     const [map_image_dimensions, setMapImageDimensions] = useState<{ width: number; height: number }>()
     const [canvas_parameters, setCanvasParameters] = useState<{
@@ -42,6 +57,10 @@ export default function DM() {
     const present_creatures = creatures?.filter((c) => c.current_region == selected_region_id)
 
     const region_image = selected_region?.states[selected_region.current_state].image
+
+    const selected_creature = selected_creature_id ? creatures?.find((c) => c.id == selected_creature_id) : undefined
+    const selected_creature_region = regions?.find((r) => r.id == selected_creature?.current_region)
+    const selected_creature_species = species?.find((s) => s.id == selected_creature?.species)
 
     const mapCoordsToCanvas = (x: number, y: number) => {
         if (!canvas_parameters || !region_image) {
@@ -238,32 +257,68 @@ export default function DM() {
                         </ul>
                     </header>
                     <main className="relative w-full overflow-hidden">
-                        <nav className="absolute top-0 left-0 bg-gray-200 shadow-lg flex flex-col gap-2 p-4 m-4 rounded-2xl inset-y-0 z-50">
-                            <h2 className="font-bold w-full text-center">Regions</h2>
-                            <ul className="flex flex-col gap-2">
-                                {regions?.map((region) => (
-                                    <li key={region.id} className="flex flex-row justify-between gap-2">
-                                        <ToggleableButton
-                                            onClick={() => {
-                                                setSelectedRegionId(region.id)
-                                            }}
-                                            selected={selected_region_id == region.id}
-                                        >
-                                            {region.name}
-                                        </ToggleableButton>
-                                        <ToggleableButton
-                                            selected={selected_world?.current_region == region.id}
-                                            onClick={() => {
-                                                socket.emit("change_region", region.id)
-                                            }}
-                                            className="!px-2"
-                                        >
-                                            <NearMe sx={{ fontSize: 16 }} />
-                                        </ToggleableButton>
-                                    </li>
-                                ))}
-                            </ul>
-                        </nav>
+                        <WindowArea className="items-start left-0">
+                            <OpenWindow show={!win_region} onClick={() => setWinRegion(true)}>
+                                <Place />
+                            </OpenWindow>
+                            <Window open={win_region} onClose={() => setWinRegion(false)}>
+                                <h2 className="font-bold w-full text-center">Regions</h2>
+                                <ul className="flex flex-col gap-2">
+                                    {regions?.map((region) => (
+                                        <li key={region.id} className="flex flex-row justify-between gap-2">
+                                            <ToggleableButton
+                                                onClick={() => {
+                                                    setSelectedRegionId(region.id)
+                                                }}
+                                                selected={selected_region_id == region.id}
+                                            >
+                                                {region.name}
+                                            </ToggleableButton>
+                                            <ToggleableButton
+                                                selected={selected_world?.current_region == region.id}
+                                                onClick={() => {
+                                                    socket.emit("change_region", region.id)
+                                                }}
+                                                className="!px-2"
+                                            >
+                                                <NearMe sx={{ fontSize: 16 }} />
+                                            </ToggleableButton>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Window>
+                            <OpenWindow show={!win_creatures} onClick={() => setWinCreatures(true)}>
+                                <Pets />
+                            </OpenWindow>
+                            <Window open={win_creatures} onClose={() => setWinCreatures(false)}>
+                                <h2 className="font-bold w-full text-center">Creatures</h2>
+                                <ul className="flex flex-col gap-2">
+                                    {creatures?.map((creature) => (
+                                        <li key={creature.id} className="flex flex-row justify-between gap-2">
+                                            <ToggleableButton
+                                                onClick={() => {
+                                                    setSelectedCreature(creature.id)
+                                                }}
+                                                selected={selected_creature_id == creature.id}
+                                                className="flex flex-row gap-2 items-center"
+                                            >
+                                                {creature.name}
+                                                {selected_region_id ? (
+                                                    creature.current_region == selected_region_id ? (
+                                                        <MyLocation sx={{ fontSize: 16 }} />
+                                                    ) : (
+                                                        <LocationSearching sx={{ fontSize: 16 }} />
+                                                    )
+                                                ) : (
+                                                    <LocationDisabled sx={{ fontSize: 16 }} />
+                                                )}
+                                            </ToggleableButton>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Window>
+                        </WindowArea>
+
                         <main className="overflow-hidden w-full h-full" ref={canvas_ref}>
                             {region_image && (
                                 <Image
@@ -315,6 +370,46 @@ export default function DM() {
                                     )
                                 })}
                         </main>
+
+                        <WindowArea className="items-end right-0">
+                            <Window
+                                open={selected_creature_id !== undefined}
+                                onClose={() => setSelectedCreature(undefined)}
+                                className="text-sm"
+                            >
+                                <h2 className="font-bold w-full text-center !text-base">{selected_creature?.name}</h2>
+
+                                {selected_creature && (
+                                    <div className="w-full h-20 relative">
+                                        <Image
+                                            src={
+                                                `${process.env.NEXT_PUBLIC_API_URL}/images/` +
+                                                    selected_creature_species?.states[selected_creature.current_state]
+                                                        .image || "missing.png"
+                                            }
+                                            alt={selected_creature ? selected_creature.name : "creature"}
+                                            fill
+                                            objectFit="contain"
+                                            unoptimized
+                                        />
+                                    </div>
+                                )}
+                                <p className="text-center text-gray-500">{selected_creature_species?.name}</p>
+                                <ToggleableButton
+                                    onClick={() => {
+                                        setSelectedRegionId(selected_creature_region?.id)
+                                    }}
+                                    selected={selected_region_id == selected_creature_region?.id}
+                                    className="items-center flex gap-2 mx-auto"
+                                >
+                                    <Place sx={{ fontSize: 16 }} />
+                                    {selected_creature_region?.name}
+                                </ToggleableButton>
+                                <div className="flex gap-2 items-center">
+                                    <p className="font-bold">State:</p>
+                                </div>
+                            </Window>
+                        </WindowArea>
                     </main>
                     <ConnectedDisplays count={connected_displays} />
                 </div>
@@ -330,4 +425,43 @@ function ConnectedDisplays({ count }: { count: number }) {
             <p className="font-bold">{count}</p>
         </div>
     )
+}
+
+function Window({
+    children,
+    open,
+    onClose,
+    className,
+}: {
+    children: React.ReactNode
+    open: boolean
+    onClose: () => void
+    className?: string
+}) {
+    if (!open) {
+        return null
+    }
+    return (
+        <div
+            className={`bg-gray-200 shadow-lg flex flex-col gap-2 p-4 rounded-2xl w-full h-full relative ${className}`}
+        >
+            <Close className="absolute top-3 right-3 cursor-pointer" onClick={onClose} />
+            {children}
+        </div>
+    )
+}
+
+function OpenWindow({ show, onClick, children }: { show: boolean; onClick: () => void; children: React.ReactNode }) {
+    if (!show) {
+        return null
+    }
+    return (
+        <button onClick={onClick} className="p-2 rounded-full bg-white shadow-lg">
+            {children}
+        </button>
+    )
+}
+
+function WindowArea({ children, className }: { children: React.ReactNode; className?: string }) {
+    return <div className={`absolute inset-y-0 w-64 z-50 p-4 gap-4 flex flex-col ${className}`}>{children}</div>
 }

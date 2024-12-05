@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.13.5",
     "@mui/icons-material": "^6.1.10",
     "@mui/material": "^6.1.10",
+    "@nextui-org/dropdown": "^2.1.31",
     "canvas": "^2.11.2",
     "image-size": "^1.1.1",
     "konva": "^9.3.16",
