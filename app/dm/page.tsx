@@ -3,6 +3,7 @@ import ToggleableButton from "@/components/toggleable_button"
 import WideButton from "@/components/wide_button"
 import Creature from "@/types/creature"
 import Region from "@/types/region"
+import Species from "@/types/species"
 import World from "@/types/world"
 import { NearMe, Public, Tv } from "@mui/icons-material"
 import { CircularProgress } from "@mui/material"
@@ -23,6 +24,7 @@ export default function DM() {
     const [selected_region_id, setSelectedRegionId] = useState<string>()
     const [regions, setRegions] = useState<Region[]>()
     const [creatures, setCreatures] = useState<Creature[]>()
+    const [species, setSpecies] = useState<Species[]>()
 
     const [map_image_dimensions, setMapImageDimensions] = useState<{ width: number; height: number }>()
     const [canvas_parameters, setCanvasParameters] = useState<{
@@ -127,6 +129,11 @@ export default function DM() {
         new_socket.on("update_creatures", (new_creatures: Creature[]) => {
             console.log(`Creatures updated: ${new_creatures.length}`)
             setCreatures(new_creatures)
+        })
+
+        new_socket.on("update_species", (new_species: Species[]) => {
+            console.log(`Species updated: ${new_species.length}`)
+            setSpecies(new_species)
         })
 
         setSocket(new_socket)
@@ -274,19 +281,34 @@ export default function DM() {
                                 region_image &&
                                 present_creatures?.map((creature) => {
                                     const { x, y } = mapCoordsToCanvas(creature.position[0], creature.position[1])
+                                    const state = species?.find((s) => s.id == creature.species)?.states[
+                                        creature.current_state
+                                    ]
+
+                                    const image_path = state ? state.image : "missing.png"
+                                    const image_width = state ? state.width : 1
+                                    const image_height = state ? state.height : 1
+
                                     return (
-                                        <div
+                                        <button
                                             key={creature.id}
                                             style={{
                                                 position: "absolute",
                                                 top: y,
                                                 left: x,
-                                                width: 20,
-                                                height: 20,
-                                                backgroundColor: "red",
-                                                transform: `translate(${creature.position[0]}px, ${creature.position[1]}px)`,
+                                                width: image_width * canvas_parameters.x_scale,
+                                                height: image_height * canvas_parameters.y_scale,
                                             }}
-                                        ></div>
+                                            className=" rounded-lg shadow-[inset_3px_3px_3px_3px_rgba(0,0,0,0.3),inset_-3px_-3px_3px_3px_rgba(255,255,255,0.3),-3px_-3px_3px_3px_rgba(255,255,255,0.1)] backdrop-blur-[1px] backdrop-filter"
+                                        >
+                                            <Image
+                                                layout="fill"
+                                                objectFit="contain"
+                                                src={`${process.env.NEXT_PUBLIC_API_URL}/images/${image_path}`}
+                                                alt="creature"
+                                                unoptimized
+                                            />
+                                        </button>
                                     )
                                 })}
                         </main>
