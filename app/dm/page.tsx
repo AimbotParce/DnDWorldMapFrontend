@@ -140,6 +140,20 @@ export default function DM() {
             setAdminPassword(undefined)
             setSocket(undefined)
             setSocketConnected(false)
+            // Reset everything else
+            setConnectedDisplays(0)
+            setWinRegion(true)
+            setWinCreatures(true)
+            setAvailableWorlds(undefined)
+            setSelectedWorldId(undefined)
+            setSelectedRegionId(undefined)
+            setRegions(undefined)
+            setCreatures(undefined)
+            setSpecies(undefined)
+            setSelectedCreature(undefined)
+            setSelectedSubregion(undefined)
+            setMapImageDimensions(undefined)
+            setCanvasParameters(undefined)
         })
 
         // Connect to the server when the component mounts
