@@ -7,6 +7,7 @@ import Species from "@/types/species"
 import World from "@/types/world"
 import {
     Close,
+    Info,
     LocationDisabled,
     LocationSearching,
     MyLocation,
@@ -18,7 +19,7 @@ import {
     Visibility,
     VisibilityOff,
 } from "@mui/icons-material"
-import { CircularProgress } from "@mui/material"
+import { CircularProgress, Tooltip } from "@mui/material"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
@@ -34,6 +35,7 @@ export default function DM() {
 
     const [win_region, setWinRegion] = useState<boolean>(true)
     const [win_creatures, setWinCreatures] = useState<boolean>(true)
+    const [win_selected_region, setWinSelectedRegion] = useState<boolean>(true)
 
     const [available_worlds, setAvailableWorlds] = useState<World[]>()
     const [selected_world_id, setSelectedWorldId] = useState<string>()
@@ -282,12 +284,14 @@ export default function DM() {
                         <ul className="flex flex-row gap-2 justify-center items-center">
                             {available_worlds?.map((w) => (
                                 <li key={w.id}>
-                                    <ToggleableButton
-                                        onClick={() => socket.emit("change_world", w.id)}
-                                        selected={w.id == selected_world?.id}
-                                    >
-                                        {w.name}
-                                    </ToggleableButton>
+                                    <Tooltip title="Change World">
+                                        <ToggleableButton
+                                            onClick={() => socket.emit("change_world", w.id)}
+                                            selected={w.id == selected_world?.id}
+                                        >
+                                            {w.name}
+                                        </ToggleableButton>
+                                    </Tooltip>
                                 </li>
                             ))}
                         </ul>
@@ -295,80 +299,90 @@ export default function DM() {
                     <main className="relative w-full overflow-hidden">
                         <WindowArea className="items-start left-0">
                             <OpenWindow show={!win_region} onClick={() => setWinRegion(true)}>
-                                <Place />
+                                <Tooltip title="Open region selection">
+                                    <Place />
+                                </Tooltip>
                             </OpenWindow>
                             <Window open={win_region} onClose={() => setWinRegion(false)}>
                                 <h2 className="font-bold w-full text-center">Regions</h2>
                                 <ul className="flex flex-col gap-2">
                                     {regions?.map((region) => (
                                         <li key={region.id} className="flex flex-row justify-between gap-2">
-                                            <ToggleableButton
-                                                onClick={() => {
-                                                    setSelectedRegionId(region.id)
-                                                    setSelectedSubregion(undefined)
-                                                }}
-                                                selected={selected_region_id == region.id}
-                                            >
-                                                {region.name}
-                                            </ToggleableButton>
-                                            <ToggleableButton
-                                                selected={selected_world?.current_region == region.id}
-                                                onClick={() => {
-                                                    socket.emit("change_region", region.id)
-                                                }}
-                                                className="!px-2"
-                                            >
-                                                <NearMe sx={{ fontSize: 16 }} />
-                                            </ToggleableButton>
+                                            <Tooltip title="Peek at region">
+                                                <ToggleableButton
+                                                    onClick={() => {
+                                                        setSelectedRegionId(region.id)
+                                                        setSelectedSubregion(undefined)
+                                                    }}
+                                                    selected={selected_region_id == region.id}
+                                                >
+                                                    {region.name}
+                                                </ToggleableButton>
+                                            </Tooltip>
+                                            <Tooltip title="Send Party to Region">
+                                                <ToggleableButton
+                                                    selected={selected_world?.current_region == region.id}
+                                                    onClick={() => {
+                                                        socket.emit("change_region", region.id)
+                                                    }}
+                                                    className="!px-2"
+                                                >
+                                                    <NearMe sx={{ fontSize: 16 }} />
+                                                </ToggleableButton>
+                                            </Tooltip>
                                         </li>
                                     ))}
                                 </ul>
                             </Window>
                             <OpenWindow show={!win_creatures} onClick={() => setWinCreatures(true)}>
-                                <Pets />
+                                <Tooltip title="Open creature selection">
+                                    <Pets />
+                                </Tooltip>
                             </OpenWindow>
                             <Window open={win_creatures} onClose={() => setWinCreatures(false)}>
                                 <h2 className="font-bold w-full text-center">Creatures</h2>
                                 <ul className="flex flex-col gap-2">
                                     {creatures?.map((creature) => (
                                         <li key={creature.id} className="flex flex-row justify-between gap-2">
-                                            <ToggleableButton
-                                                onClick={() => {
-                                                    setSelectedCreature(creature.id)
-                                                }}
-                                                selected={selected_creature_id == creature.id}
-                                                className="flex flex-row gap-2 items-center"
-                                                draggable
-                                                onDragEnd={(e) => {
-                                                    if (!canvas_parameters) {
-                                                        return
-                                                    }
-                                                    const image = species?.find((s) => s.id == creature.species)
-                                                        ?.states[creature.current_state]
-                                                    if (!image) {
-                                                        return
-                                                    }
-                                                    const ncoords = mapCanvasToCoords(e.clientX, e.clientY)
+                                            <Tooltip title="Click/Drag to see/add creature">
+                                                <ToggleableButton
+                                                    onClick={() => {
+                                                        setSelectedCreature(creature.id)
+                                                    }}
+                                                    selected={selected_creature_id == creature.id}
+                                                    className="flex flex-row gap-2 items-center"
+                                                    draggable
+                                                    onDragEnd={(e) => {
+                                                        if (!canvas_parameters) {
+                                                            return
+                                                        }
+                                                        const image = species?.find((s) => s.id == creature.species)
+                                                            ?.states[creature.current_state]
+                                                        if (!image) {
+                                                            return
+                                                        }
+                                                        const ncoords = mapCanvasToCoords(e.clientX, e.clientY)
 
-                                                    const nregion = selected_region_id
-                                                    socket.emit("update_creature", {
-                                                        ...creature,
-                                                        position: [ncoords.x, ncoords.y],
-                                                        current_region: nregion,
-                                                    })
-                                                }}
-                                            >
-                                                {creature.name}
-                                                {selected_region_id ? (
-                                                    creature.current_region == selected_region_id ? (
-                                                        <MyLocation sx={{ fontSize: 16 }} />
+                                                        const nregion = selected_region_id
+                                                        socket.emit("update_creature", {
+                                                            ...creature,
+                                                            position: [ncoords.x, ncoords.y],
+                                                            current_region: nregion,
+                                                        })
+                                                    }}
+                                                >
+                                                    {creature.name}
+                                                    {selected_region_id ? (
+                                                        creature.current_region == selected_region_id ? (
+                                                            <MyLocation sx={{ fontSize: 16 }} />
+                                                        ) : (
+                                                            <LocationSearching sx={{ fontSize: 16 }} />
+                                                        )
                                                     ) : (
-                                                        <LocationSearching sx={{ fontSize: 16 }} />
-                                                    )
-                                                ) : (
-                                                    <LocationDisabled sx={{ fontSize: 16 }} />
-                                                )}
-                                            </ToggleableButton>
+                                                        <LocationDisabled sx={{ fontSize: 16 }} />
+                                                    )}
+                                                </ToggleableButton>
+                                            </Tooltip>
                                         </li>
                                     ))}
                                 </ul>
@@ -426,24 +440,26 @@ export default function DM() {
                                                     : "rounded-lg border shadow-[inset_0px_0px_3px_3px_rgba(128,58,58,0.3),0px_0px_3px_3px_rgba(128,58,58,0.3)] backdrop-blur-[1px] backdrop-filter"
                                             }
                                         >
-                                            <Image
-                                                layout="fill"
-                                                objectFit="contain"
-                                                src={`${process.env.NEXT_PUBLIC_API_URL}/images/${image_path}`}
-                                                alt="creature"
-                                                unoptimized
-                                                onDragEnd={(e) => {
-                                                    const trans_x =
-                                                        e.nativeEvent.offsetX / canvas_parameters.x_scale -
-                                                        image_width / 2
-                                                    const trans_y =
-                                                        e.nativeEvent.offsetY / canvas_parameters.y_scale -
-                                                        image_height / 2
-                                                    creature.position[0] = creature.position[0] + trans_x
-                                                    creature.position[1] = creature.position[1] + trans_y
-                                                    socket.emit("update_creature", creature)
-                                                }}
-                                            />
+                                            <Tooltip title={creature.name}>
+                                                <Image
+                                                    layout="fill"
+                                                    objectFit="contain"
+                                                    src={`${process.env.NEXT_PUBLIC_API_URL}/images/${image_path}`}
+                                                    alt="creature"
+                                                    unoptimized
+                                                    onDragEnd={(e) => {
+                                                        const trans_x =
+                                                            e.nativeEvent.offsetX / canvas_parameters.x_scale -
+                                                            image_width / 2
+                                                        const trans_y =
+                                                            e.nativeEvent.offsetY / canvas_parameters.y_scale -
+                                                            image_height / 2
+                                                        creature.position[0] = creature.position[0] + trans_x
+                                                        creature.position[1] = creature.position[1] + trans_y
+                                                        socket.emit("update_creature", creature)
+                                                    }}
+                                                />
+                                            </Tooltip>
                                         </motion.button>
                                     )
                                 })}
@@ -475,6 +491,59 @@ export default function DM() {
                         </main>
 
                         <WindowArea className="items-end right-0">
+                            <OpenWindow show={!win_selected_region} onClick={() => setWinSelectedRegion(true)}>
+                                <Tooltip title="Open region information">
+                                    <Info />
+                                </Tooltip>
+                            </OpenWindow>
+                            <Window
+                                open={selected_region_id !== undefined && win_selected_region}
+                                onClose={() => setWinSelectedRegion(false)}
+                                className="text-sm"
+                            >
+                                <h2 className="font-bold w-full text-center !text-base">{selected_region?.name}</h2>
+                                <div className="flex justify-center gap-2 w-full items-center">
+                                    <Tooltip title="Send Party to Region">
+                                        <ToggleableButton
+                                            selected={selected_world?.current_region == selected_region?.id}
+                                            onClick={() => {
+                                                if (selected_region) {
+                                                    socket.emit("change_region", selected_region.id)
+                                                }
+                                            }}
+                                            className="!px-2"
+                                        >
+                                            <NearMe sx={{ fontSize: 16 }} />
+                                        </ToggleableButton>
+                                    </Tooltip>
+                                    <Tooltip
+                                        title={
+                                            selected_region?.visible
+                                                ? "Add Global Fog of War"
+                                                : "Remove Global Fog of War"
+                                        }
+                                    >
+                                        <ToggleableButton
+                                            onClick={() => {
+                                                if (selected_region) {
+                                                    socket.emit("update_region", {
+                                                        ...selected_region,
+                                                        visible: !selected_region.visible,
+                                                    })
+                                                }
+                                            }}
+                                            selected={selected_region?.visible}
+                                            className="!px-2"
+                                        >
+                                            {selected_region?.visible ? (
+                                                <Visibility sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <VisibilityOff sx={{ fontSize: 16 }} />
+                                            )}
+                                        </ToggleableButton>
+                                    </Tooltip>
+                                </div>
+                            </Window>
                             <Window
                                 open={selected_creature_id !== undefined}
                                 onClose={() => setSelectedCreature(undefined)}
@@ -499,34 +568,38 @@ export default function DM() {
                                 )}
                                 <p className="text-center text-gray-500">{selected_creature_species?.name}</p>
                                 <div className="flex justify-center gap-2 w-full items-center">
-                                    <ToggleableButton
-                                        onClick={() => {
-                                            setSelectedRegionId(selected_creature_region?.id)
-                                        }}
-                                        selected={selected_region_id == selected_creature_region?.id}
-                                        className="items-center flex gap-2 text-xs"
-                                    >
-                                        <Place sx={{ fontSize: 16 }} />
-                                        {selected_creature_region?.name}
-                                    </ToggleableButton>
-                                    <ToggleableButton
-                                        onClick={() => {
-                                            if (selected_creature) {
-                                                socket.emit("update_creature", {
-                                                    ...selected_creature,
-                                                    visible: !selected_creature.visible,
-                                                })
-                                            }
-                                        }}
-                                        selected={selected_creature?.visible}
-                                        className="!px-2"
-                                    >
-                                        {selected_creature?.visible ? (
-                                            <Visibility sx={{ fontSize: 16 }} />
-                                        ) : (
-                                            <VisibilityOff sx={{ fontSize: 16 }} />
-                                        )}
-                                    </ToggleableButton>
+                                    <Tooltip title="Peek at its location">
+                                        <ToggleableButton
+                                            onClick={() => {
+                                                setSelectedRegionId(selected_creature_region?.id)
+                                            }}
+                                            selected={selected_region_id == selected_creature_region?.id}
+                                            className="items-center flex gap-2 text-xs"
+                                        >
+                                            <Place sx={{ fontSize: 16 }} />
+                                            {selected_creature_region?.name}
+                                        </ToggleableButton>
+                                    </Tooltip>
+                                    <Tooltip title={selected_creature?.visible ? "Hide creature" : "Show creature"}>
+                                        <ToggleableButton
+                                            onClick={() => {
+                                                if (selected_creature) {
+                                                    socket.emit("update_creature", {
+                                                        ...selected_creature,
+                                                        visible: !selected_creature.visible,
+                                                    })
+                                                }
+                                            }}
+                                            selected={selected_creature?.visible}
+                                            className="!px-2"
+                                        >
+                                            {selected_creature?.visible ? (
+                                                <Visibility sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <VisibilityOff sx={{ fontSize: 16 }} />
+                                            )}
+                                        </ToggleableButton>
+                                    </Tooltip>
                                 </div>
                                 <div className="flex gap-2 items-center">
                                     <p className="font-bold">State:</p>
@@ -556,54 +629,60 @@ export default function DM() {
                                 className="text-sm"
                             >
                                 <h2 className="font-bold w-full text-center !text-base">
-                                    {selected_subregion_data?.name}
+                                    [SUB] {selected_subregion_data?.name}
                                 </h2>
                                 <div className="flex justify-center gap-2 w-full items-center">
-                                    <ToggleableButton
-                                        onClick={() => {
-                                            if (selected_subregion_data) {
-                                                setSelectedRegionId(selected_subregion_data.id)
-                                                setSelectedSubregion(undefined)
-                                            }
-                                        }}
-                                        className="!px-2"
-                                    >
-                                        Visit
-                                    </ToggleableButton>
-                                    <ToggleableButton
-                                        selected={selected_world?.current_region == selected_subregion_data?.id}
-                                        onClick={() => {
-                                            console.log(selected_subregion_data)
-                                            if (selected_subregion_data) {
-                                                socket.emit("change_region", selected_subregion_data.id)
-                                            }
-                                        }}
-                                        className="!px-2"
-                                    >
-                                        <NearMe sx={{ fontSize: 16 }} />
-                                    </ToggleableButton>
-                                    <ToggleableButton
-                                        onClick={() => {
-                                            if (selected_subregion && selected_region) {
-                                                socket.emit("update_region", {
-                                                    ...selected_region,
-                                                    subregions: selected_region.subregions.map((s) =>
-                                                        s.region == selected_subregion.region
-                                                            ? { ...s, visible: !s.visible }
-                                                            : s
-                                                    ),
-                                                })
-                                            }
-                                        }}
-                                        selected={selected_subregion?.visible}
-                                        className="!px-2"
-                                    >
-                                        {selected_subregion?.visible ? (
-                                            <Visibility sx={{ fontSize: 16 }} />
-                                        ) : (
-                                            <VisibilityOff sx={{ fontSize: 16 }} />
-                                        )}
-                                    </ToggleableButton>
+                                    <Tooltip title="Peek at this subregion">
+                                        <ToggleableButton
+                                            onClick={() => {
+                                                if (selected_subregion_data) {
+                                                    setSelectedRegionId(selected_subregion_data.id)
+                                                    setSelectedSubregion(undefined)
+                                                }
+                                            }}
+                                            className="!px-2"
+                                        >
+                                            Visit
+                                        </ToggleableButton>
+                                    </Tooltip>
+                                    <Tooltip title="Send Party to Subregion">
+                                        <ToggleableButton
+                                            selected={selected_world?.current_region == selected_subregion_data?.id}
+                                            onClick={() => {
+                                                console.log(selected_subregion_data)
+                                                if (selected_subregion_data) {
+                                                    socket.emit("change_region", selected_subregion_data.id)
+                                                }
+                                            }}
+                                            className="!px-2"
+                                        >
+                                            <NearMe sx={{ fontSize: 16 }} />
+                                        </ToggleableButton>
+                                    </Tooltip>
+                                    <Tooltip title={selected_subregion?.visible ? "Hide subregion" : "Show subregion"}>
+                                        <ToggleableButton
+                                            onClick={() => {
+                                                if (selected_subregion && selected_region) {
+                                                    socket.emit("update_region", {
+                                                        ...selected_region,
+                                                        subregions: selected_region.subregions.map((s) =>
+                                                            s.region == selected_subregion.region
+                                                                ? { ...s, visible: !s.visible }
+                                                                : s
+                                                        ),
+                                                    })
+                                                }
+                                            }}
+                                            selected={selected_subregion?.visible}
+                                            className="!px-2"
+                                        >
+                                            {selected_subregion?.visible ? (
+                                                <Visibility sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <VisibilityOff sx={{ fontSize: 16 }} />
+                                            )}
+                                        </ToggleableButton>
+                                    </Tooltip>
                                 </div>
                             </Window>
                         </WindowArea>
