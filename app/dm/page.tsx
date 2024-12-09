@@ -360,10 +360,16 @@ export default function DM() {
                                     return (
                                         <motion.button
                                             key={creature.id}
+                                            animate={{
+                                                x: x,
+                                                y: y,
+                                            }}
+                                            transition={{
+                                                type: "tween",
+                                                duration: 0.2,
+                                            }}
                                             style={{
                                                 position: "absolute",
-                                                top: y,
-                                                left: x,
                                                 width: image_width * canvas_parameters.x_scale,
                                                 height: image_height * canvas_parameters.y_scale,
                                             }}
