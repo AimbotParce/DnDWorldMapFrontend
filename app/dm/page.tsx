@@ -431,7 +431,7 @@ export default function DM() {
                                     </div>
                                 )}
                                 <p className="text-center text-gray-500">{selected_creature_species?.name}</p>
-                                <div className="flex justify-center gap-2">
+                                <div className="flex justify-center gap-2 w-full items-center">
                                     <ToggleableButton
                                         onClick={() => {
                                             setSelectedRegionId(selected_creature_region?.id)
@@ -452,7 +452,7 @@ export default function DM() {
                                             }
                                         }}
                                         selected={selected_creature?.visible}
-                                        className="px-2"
+                                        className="!px-2"
                                     >
                                         {selected_creature?.visible ? (
                                             <Visibility sx={{ fontSize: 16 }} />
