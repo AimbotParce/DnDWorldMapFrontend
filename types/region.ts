@@ -31,3 +31,4 @@ interface Region {
 }
 
 export default Region
+export type { Grid, RegionImage, RegionState, Subregion }
