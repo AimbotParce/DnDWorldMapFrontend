@@ -584,7 +584,7 @@ export default function DM() {
 
 function ConnectedDisplays({ count }: { count: number }) {
     return (
-        <div className="flex flex-row gap-1 items-center justify-center rounded-full bg-white absolute bottom-5 right-5 p-4 shadow-lg">
+        <div className="flex flex-row gap-1 items-center justify-center rounded-full bg-white absolute bottom-5 right-5 p-4 shadow-lg z-50">
             <Tv />
             <p className="font-bold">{count}</p>
         </div>
@@ -627,5 +627,5 @@ function OpenWindow({ show, onClick, children }: { show: boolean; onClick: () =>
 }
 
 function WindowArea({ children, className }: { children: React.ReactNode; className?: string }) {
-    return <div className={`absolute inset-y-0 w-64 z-50 p-4 gap-4 flex flex-col ${className}`}>{children}</div>
+    return <div className={`absolute inset-y-0 w-64 z-10 p-4 gap-4 flex flex-col ${className}`}>{children}</div>
 }
