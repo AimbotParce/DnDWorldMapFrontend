@@ -29,3 +29,7 @@ input:focus {
 button:focus {
   outline: none;
 }
+
+select:focus {
+  outline: none;
+}

@@ -463,6 +463,24 @@ export default function DM() {
                                 </div>
                                 <div className="flex gap-2 items-center">
                                     <p className="font-bold">State:</p>
+                                    <select
+                                        value={selected_creature?.current_state}
+                                        onChange={(e) => {
+                                            if (selected_creature) {
+                                                socket.emit("update_creature", {
+                                                    ...selected_creature,
+                                                    current_state: e.target.value,
+                                                })
+                                            }
+                                        }}
+                                        className="w-full px-2 py-1 rounded-full cursor-pointer shadow-lg"
+                                    >
+                                        {Object.keys(selected_creature_species?.states ?? {}).map((key) => (
+                                            <option key={key} value={key}>
+                                                {key}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </Window>
                         </WindowArea>
