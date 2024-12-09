@@ -14,6 +14,10 @@ export default function Display() {
     const [world, setWorld] = useState<string>()
     const [region, setRegion] = useState<VisibleRegion>()
     const [creatures, setCreatures] = useState<VisibleCreature[]>()
+    const [transitioning, setTransitioning] = useState<boolean>(false)
+    const [clouds, setClouds] = useState<
+        { x: number; y: number; scale: number; kind: number; x_out: number; y_out: number; scale_out: number }[]
+    >([])
 
     const [map_image_dimensions, setMapImageDimensions] = useState<{ width: number; height: number }>()
     const [canvas_parameters, setCanvasParameters] = useState<{
@@ -83,7 +87,16 @@ export default function Display() {
         })
 
         new_socket.on("change_world", setWorld)
-        new_socket.on("change_region", setRegion)
+        new_socket.on("change_region", (new_region: VisibleRegion) => {
+            console.log("Changing region")
+            setTransitioning(true)
+            setTimeout(() => {
+                setRegion(new_region)
+            }, 3500)
+            setTimeout(() => {
+                setTransitioning(false)
+            }, 4000)
+        })
         new_socket.on("update_creatures", setCreatures)
 
         setSocket(new_socket)
@@ -91,6 +104,27 @@ export default function Display() {
         return () => {
             new_socket.disconnect()
         }
+    }, [])
+
+    useEffect(() => {
+        // Generate random clouds
+        const new_clouds = []
+        for (let i = 0; i < 20; i++) {
+            // Origin coordinates
+            const x = Math.random()
+            const y = Math.random()
+            const scale = Math.random() * 0.7 + 0.3
+            new_clouds.push({
+                kind: Math.floor(Math.random() * 2) + 1,
+                scale: scale,
+                x: x - 0.5, // The cloud is centered at x=0.5, y=0.5
+                y: y - 0.5,
+                x_out: Math.sign(x - 0.5) * 1.5 * 1.5 + 0.5,
+                y_out: (y - 0.5) * 1.2,
+                scale_out: scale * 1.5,
+            })
+        }
+        setClouds(new_clouds)
     }, [])
 
     return (
@@ -150,9 +184,69 @@ export default function Display() {
                                     </motion.div>
                                 )
                             })}
+                        {clouds.map((cloud, i) => (
+                            <Cloud
+                                kind={cloud.kind}
+                                x={transitioning ? cloud.x : cloud.x_out}
+                                y={transitioning ? cloud.y : cloud.y_out}
+                                scale={transitioning ? cloud.scale : cloud.scale_out}
+                                key={i}
+                            />
+                        ))}
+                        <motion.div
+                            className="absolute inset-0 bg-white"
+                            animate={{
+                                opacity: transitioning ? 1 : 0,
+                            }}
+                            transition={{
+                                type: "tween",
+                                duration: 1.5,
+                                delay: transitioning ? 2 : 0,
+                            }}
+                        />
                     </main>
                 </div>
             )}
         </main>
+    )
+}
+
+function Cloud({ kind, x, y, scale }: { kind: number; x: number; y: number; scale: number }) {
+    // Get window dimensions
+    const [window_dimensions, setWindowDimensions] = useState<{ width: number; height: number }>()
+
+    useEffect(() => {
+        const updateWindowDimensions = () => {
+            setWindowDimensions({ width: window.innerWidth, height: window.innerHeight })
+        }
+
+        window.addEventListener("resize", updateWindowDimensions)
+        updateWindowDimensions()
+
+        return () => window.removeEventListener("resize", updateWindowDimensions)
+    }, [])
+
+    return (
+        <motion.div
+            className="z-10"
+            animate={{
+                x: window_dimensions ? window_dimensions.width * x : -10000,
+                y: window_dimensions ? window_dimensions.height * y : -10000,
+                scale: scale,
+            }}
+            transition={{
+                type: "tween",
+                duration: 3.5,
+                ease: "easeInOut",
+            }}
+            style={{
+                position: "absolute",
+                scale: scale,
+                width: window_dimensions?.width,
+                height: window_dimensions?.height,
+            }}
+        >
+            <Image src={`/cloud/${kind}.png`} alt="cloud" objectFit="contain" fill />
+        </motion.div>
     )
 }
