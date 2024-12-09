@@ -3,9 +3,12 @@ import VisibleCreature from "@/types/visible_creature"
 import VisibleRegion from "@/types/visible_region"
 import { CircularProgress } from "@mui/material"
 import { motion } from "framer-motion"
+import { Uncial_Antiqua } from "next/font/google"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import io, { Socket } from "socket.io-client"
+
+const unical_antiqua_font = Uncial_Antiqua({ weight: "400", subsets: ["latin"] })
 
 export default function Display() {
     const [socket, setSocket] = useState<Socket>()
@@ -15,6 +18,7 @@ export default function Display() {
     const [region, setRegion] = useState<VisibleRegion>()
     const [creatures, setCreatures] = useState<VisibleCreature[]>()
     const [transitioning, setTransitioning] = useState<boolean>(false)
+    const [transitioning_to, setTransitioningTo] = useState<string>("")
     const [clouds, setClouds] = useState<
         { x: number; y: number; scale: number; kind: number; x_out: number; y_out: number; scale_out: number }[]
     >([])
@@ -90,6 +94,7 @@ export default function Display() {
         new_socket.on("change_region", (new_region: VisibleRegion) => {
             console.log("Changing region")
             setTransitioning(true)
+            setTransitioningTo(new_region.name)
             setTimeout(() => {
                 setRegion(new_region)
             }, 3500)
@@ -204,6 +209,22 @@ export default function Display() {
                                 delay: transitioning ? 2 : 0,
                             }}
                         />
+                        <motion.div
+                            className={`absolute inset-0 flex flex-col items-center justify-center z-20 font-['Oswald'] ${unical_antiqua_font.className}`}
+                            animate={{
+                                opacity: transitioning ? 1 : 0,
+                                x: transitioning ? 0 : -window.innerWidth,
+                            }}
+                            transition={{
+                                type: "tween",
+                                ease: "easeInOut",
+                                delay: transitioning ? 1 : 0,
+                                duration: 2.5,
+                            }}
+                        >
+                            <h1 className="text-6xl font-bold">{world}</h1>
+                            <p className="text-xl"> {transitioning_to} </p>
+                        </motion.div>
                     </main>
                 </div>
             )}
