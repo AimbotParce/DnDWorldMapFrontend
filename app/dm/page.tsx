@@ -23,7 +23,7 @@ import { useEffect, useRef, useState } from "react"
 import io, { Socket } from "socket.io-client"
 
 export default function DM() {
-    const [admin_password, setAdminPassword] = useState<string>()
+    const [admin_password, setAdminPassword] = useState<string>("Admin1234")
     const [_admin_password_entry, setAdminPasswordEntry] = useState<string>("")
     const [socket, setSocket] = useState<Socket>()
     const [socket_connected, setSocketConnected] = useState<boolean>(false)
@@ -71,6 +71,18 @@ export default function DM() {
         return {
             x: x_origin + (x - region_image.top_left_corner[0]) * x_scale,
             y: y_origin + (y - region_image.top_left_corner[1]) * y_scale,
+        }
+    }
+
+    const mapCanvasToCoords = (x: number, y: number) => {
+        if (!canvas_parameters || !region_image) {
+            return { x: 0, y: 0 }
+        }
+        const { x_origin, y_origin, x_scale, y_scale } = canvas_parameters
+
+        return {
+            x: (x - x_origin) / x_scale + region_image.top_left_corner[0],
+            y: (y - y_origin) / y_scale + region_image.top_left_corner[1],
         }
     }
 
@@ -355,8 +367,9 @@ export default function DM() {
                                                 width: image_width * canvas_parameters.x_scale,
                                                 height: image_height * canvas_parameters.y_scale,
                                             }}
-                                            onDrag={() => {}} // Add drag functionality
-                                            onClick={() => {}} // Add click functionality
+                                            onClick={() => {
+                                                setSelectedCreature(creature.id)
+                                            }}
                                             className=" rounded-lg shadow-[inset_3px_3px_3px_3px_rgba(0,0,0,0.3),inset_-3px_-3px_3px_3px_rgba(255,255,255,0.3),-3px_-3px_3px_3px_rgba(255,255,255,0.1)] backdrop-blur-[1px] backdrop-filter"
                                         >
                                             <Image
@@ -365,6 +378,17 @@ export default function DM() {
                                                 src={`${process.env.NEXT_PUBLIC_API_URL}/images/${image_path}`}
                                                 alt="creature"
                                                 unoptimized
+                                                onDragEnd={(e) => {
+                                                    const trans_x =
+                                                        e.nativeEvent.offsetX / canvas_parameters.x_scale -
+                                                        image_width / 2
+                                                    const trans_y =
+                                                        e.nativeEvent.offsetY / canvas_parameters.y_scale -
+                                                        image_height / 2
+                                                    creature.position[0] = creature.position[0] + trans_x
+                                                    creature.position[1] = creature.position[1] + trans_y
+                                                    socket.emit("update_creature", creature)
+                                                }}
                                             />
                                         </motion.button>
                                     )

@@ -20,7 +20,9 @@
     "motion": "^11.13.1",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
+    "react-dnd": "^16.0.1",
     "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react-draggable": "^4.4.6",
     "react-konva": "^19.0.0-1",
     "socket.io-client": "^4.8.1",
     "use-image": "^1.1.1"
