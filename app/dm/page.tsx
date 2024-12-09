@@ -84,17 +84,17 @@ export default function DM() {
         }
     }
 
-    const mapCanvasToCoords = (x: number, y: number) => {
-        if (!canvas_parameters || !region_image) {
-            return { x: 0, y: 0 }
-        }
-        const { x_origin, y_origin, x_scale, y_scale } = canvas_parameters
+    // const mapCanvasToCoords = (x: number, y: number) => {
+    //     if (!canvas_parameters || !region_image) {
+    //         return { x: 0, y: 0 }
+    //     }
+    //     const { x_origin, y_origin, x_scale, y_scale } = canvas_parameters
 
-        return {
-            x: (x - x_origin) / x_scale + region_image.top_left_corner[0],
-            y: (y - y_origin) / y_scale + region_image.top_left_corner[1],
-        }
-    }
+    //     return {
+    //         x: (x - x_origin) / x_scale + region_image.top_left_corner[0],
+    //         y: (y - y_origin) / y_scale + region_image.top_left_corner[1],
+    //     }
+    // }
 
     useEffect(() => {
         if (canvas_ref.current && map_image_dimensions && region_image) {
