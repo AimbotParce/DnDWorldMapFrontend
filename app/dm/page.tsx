@@ -25,7 +25,7 @@ import { useEffect, useRef, useState } from "react"
 import io, { Socket } from "socket.io-client"
 
 export default function DM() {
-    const [admin_password, setAdminPassword] = useState<string>("Admin1234")
+    const [admin_password, setAdminPassword] = useState<string>()
     const [_admin_password_entry, setAdminPasswordEntry] = useState<string>("")
     const [socket, setSocket] = useState<Socket>()
     const [socket_connected, setSocketConnected] = useState<boolean>(false)
