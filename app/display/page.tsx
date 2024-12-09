@@ -94,7 +94,7 @@ export default function Display() {
     }, [])
 
     return (
-        <main className="flex flex-col items-center justify-center min-h-screen bg-gray-100 ">
+        <main className="flex flex-col items-center justify-center min-h-screen bg-black ">
             {socket === undefined || !socket_connected ? (
                 <div className="flex flex-row gap-2 justify-center items-center">
                     <h1 className="font-bold">Connecting</h1>
