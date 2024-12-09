@@ -138,13 +138,13 @@ export default function Display() {
                                             width: image_width * canvas_parameters.x_scale,
                                             height: image_height * canvas_parameters.y_scale,
                                         }}
-                                        className="rounded-lg border shadow-[inset_0px_0px_3px_3px_rgba(0,255,255,0.3),0px_0px_3px_3px_rgba(0,255,255,0.3)] backdrop-blur-[1px] backdrop-filter"
                                     >
                                         <Image
                                             layout="fill"
                                             objectFit="contain"
                                             src={`${process.env.NEXT_PUBLIC_API_URL}/images/${image_path}`}
                                             alt="creature"
+                                            className="drop-shadow-[0px_0px_10px_rgba(0,0,0,0.7)]"
                                             unoptimized
                                         />
                                     </motion.div>
