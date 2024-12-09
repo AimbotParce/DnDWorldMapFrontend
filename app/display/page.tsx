@@ -33,6 +33,8 @@ export default function Display() {
 
     const canvas_ref = useRef<HTMLDivElement>(null)
 
+    console.log("Region", region)
+
     const mapCoordsToCanvas = (x: number, y: number) => {
         if (!canvas_parameters || !region) {
             return { x: 0, y: 0 }
@@ -154,6 +156,22 @@ export default function Display() {
                                 }}
                             />
                         )}
+                        {region &&
+                            region.fog_of_war.map((subfog, i) => (
+                                <div
+                                    key={i}
+                                    className="absolute inset-0 cursor-pointer backdrop-blur-[1px] backdrop-filter"
+                                    style={{
+                                        clipPath: `polygon(${subfog
+                                            .map((point) => {
+                                                const pt = mapCoordsToCanvas(point[0], point[1])
+                                                return `${pt.x}px ${pt.y}px`
+                                            })
+                                            .join(", ")})`,
+                                        backgroundColor: "rgb(0,0,0)",
+                                    }}
+                                ></div>
+                            ))}
                         {canvas_parameters &&
                             creatures?.map((creature, i) => {
                                 const { x, y } = mapCoordsToCanvas(creature.position[0], creature.position[1])

@@ -5,7 +5,7 @@ interface VisibleRegion {
     name: string
     grid: null | Grid
     image: RegionImage
-    visible_polygon: Point2D[]
+    fog_of_war: Point2D[][]
 }
 
 export default VisibleRegion
