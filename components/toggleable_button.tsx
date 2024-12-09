@@ -11,8 +11,8 @@ function ToggleableButton(props: ToggleableButtonProps) {
             onClick={onClick}
             className={
                 selected
-                    ? `${baseClassName} bg-blue-500 border-blue-500 text-white hover:text-white cursor-default`
-                    : `${baseClassName} bg-white border-white hover:border-blue-500 hover:text-blue cursor:pointer`
+                    ? `${baseClassName} bg-blue-500 border-blue-500 text-white hover:text-white`
+                    : `${baseClassName} bg-white border-white hover:border-blue-500 hover:text-blue`
             }
             {...otherProps}
         >

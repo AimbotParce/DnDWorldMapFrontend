@@ -15,6 +15,8 @@ import {
     Place,
     Public,
     Tv,
+    Visibility,
+    VisibilityOff,
 } from "@mui/icons-material"
 import { CircularProgress } from "@mui/material"
 import { motion } from "framer-motion"
@@ -376,7 +378,11 @@ export default function DM() {
                                             onClick={() => {
                                                 setSelectedCreature(creature.id)
                                             }}
-                                            className=" rounded-lg shadow-[inset_3px_3px_3px_3px_rgba(0,0,0,0.3),inset_-3px_-3px_3px_3px_rgba(255,255,255,0.3),-3px_-3px_3px_3px_rgba(255,255,255,0.1)] backdrop-blur-[1px] backdrop-filter"
+                                            className={
+                                                creature.visible
+                                                    ? "rounded-lg border shadow-[inset_0px_0px_3px_3px_rgba(0,255,255,0.3),0px_0px_3px_3px_rgba(0,255,255,0.3)] backdrop-blur-[1px] backdrop-filter"
+                                                    : "rounded-lg border shadow-[inset_0px_0px_3px_3px_rgba(128,58,58,0.3),0px_0px_3px_3px_rgba(128,58,58,0.3)] backdrop-blur-[1px] backdrop-filter"
+                                            }
                                         >
                                             <Image
                                                 layout="fill"
@@ -425,16 +431,36 @@ export default function DM() {
                                     </div>
                                 )}
                                 <p className="text-center text-gray-500">{selected_creature_species?.name}</p>
-                                <ToggleableButton
-                                    onClick={() => {
-                                        setSelectedRegionId(selected_creature_region?.id)
-                                    }}
-                                    selected={selected_region_id == selected_creature_region?.id}
-                                    className="items-center flex gap-2 mx-auto"
-                                >
-                                    <Place sx={{ fontSize: 16 }} />
-                                    {selected_creature_region?.name}
-                                </ToggleableButton>
+                                <div className="flex justify-center gap-2">
+                                    <ToggleableButton
+                                        onClick={() => {
+                                            setSelectedRegionId(selected_creature_region?.id)
+                                        }}
+                                        selected={selected_region_id == selected_creature_region?.id}
+                                        className="items-center flex gap-2 text-xs"
+                                    >
+                                        <Place sx={{ fontSize: 16 }} />
+                                        {selected_creature_region?.name}
+                                    </ToggleableButton>
+                                    <ToggleableButton
+                                        onClick={() => {
+                                            if (selected_creature) {
+                                                socket.emit("update_creature", {
+                                                    ...selected_creature,
+                                                    visible: !selected_creature.visible,
+                                                })
+                                            }
+                                        }}
+                                        selected={selected_creature?.visible}
+                                        className="px-2"
+                                    >
+                                        {selected_creature?.visible ? (
+                                            <Visibility sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <VisibilityOff sx={{ fontSize: 16 }} />
+                                        )}
+                                    </ToggleableButton>
+                                </div>
                                 <div className="flex gap-2 items-center">
                                     <p className="font-bold">State:</p>
                                 </div>
