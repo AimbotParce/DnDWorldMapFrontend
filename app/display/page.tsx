@@ -109,6 +109,7 @@ export default function Display() {
             }, 4000)
         })
         new_socket.on("update_creatures", setCreatures)
+        new_socket.on("update_region", setRegion)
 
         setSocket(new_socket)
         // Cleanup the connection when the component unmounts
@@ -161,21 +162,24 @@ export default function Display() {
                             />
                         )}
                         {region &&
-                            region.fog_of_war.map((subfog, i) => (
-                                <div
-                                    key={i}
-                                    className="absolute inset-0 cursor-pointer backdrop-blur-[1px] backdrop-filter"
-                                    style={{
-                                        clipPath: `polygon(${subfog
-                                            .map((point) => {
-                                                const pt = mapCoordsToCanvas(point[0], point[1])
-                                                return `${pt.x}px ${pt.y}px`
-                                            })
-                                            .join(", ")})`,
-                                        backgroundColor: "rgb(0,0,0)",
-                                    }}
-                                ></div>
-                            ))}
+                            region.fog_of_war.map((subfog, i) => {
+                                if (subfog.length === 0) return null
+                                return (
+                                    <div
+                                        key={i}
+                                        className="absolute inset-0 cursor-pointer backdrop-blur-[1px] backdrop-filter"
+                                        style={{
+                                            clipPath: `polygon(${subfog
+                                                .map((point) => {
+                                                    const pt = mapCoordsToCanvas(point[0], point[1])
+                                                    return `${pt.x}px ${pt.y}px`
+                                                })
+                                                .join(", ")})`,
+                                            backgroundColor: "rgb(0,0,0)",
+                                        }}
+                                    ></div>
+                                )
+                            })}
                         {canvas_parameters &&
                             creatures?.map((creature, i) => {
                                 const { x, y } = mapCoordsToCanvas(creature.position[0], creature.position[1])
