@@ -43,6 +43,7 @@ export default function DM() {
     const [species, setSpecies] = useState<Species[]>()
 
     const [selected_creature_id, setSelectedCreature] = useState<string>()
+    const [selected_subregion_id, setSelectedSubregion] = useState<string>()
 
     const [map_image_dimensions, setMapImageDimensions] = useState<{ width: number; height: number }>()
     const [canvas_parameters, setCanvasParameters] = useState<{
@@ -63,6 +64,13 @@ export default function DM() {
     const selected_creature = selected_creature_id ? creatures?.find((c) => c.id == selected_creature_id) : undefined
     const selected_creature_region = regions?.find((r) => r.id == selected_creature?.current_region)
     const selected_creature_species = species?.find((s) => s.id == selected_creature?.species)
+
+    const selected_subregion = selected_subregion_id
+        ? selected_region?.subregions.find((s) => s.region == selected_subregion_id)
+        : undefined
+    const selected_subregion_data = selected_subregion
+        ? regions?.find((r) => r.id == selected_subregion.region)
+        : undefined
 
     const mapCoordsToCanvas = (x: number, y: number) => {
         if (!canvas_parameters || !region_image) {
@@ -283,6 +291,7 @@ export default function DM() {
                                             <ToggleableButton
                                                 onClick={() => {
                                                     setSelectedRegionId(region.id)
+                                                    setSelectedSubregion(undefined)
                                                 }}
                                                 selected={selected_region_id == region.id}
                                             >
@@ -405,6 +414,31 @@ export default function DM() {
                                         </motion.button>
                                     )
                                 })}
+
+                            {canvas_parameters &&
+                                region_image &&
+                                selected_region.subregions.map((subregion, i) => {
+                                    const polygon = subregion.polygon.map((point) =>
+                                        mapCoordsToCanvas(point[0], point[1])
+                                    )
+                                    return (
+                                        <button
+                                            key={i}
+                                            className="absolute inset-0 cursor-pointer backdrop-blur-[1px] backdrop-filter"
+                                            style={{
+                                                clipPath: `polygon(${polygon
+                                                    .map((point) => `${point.x}px ${point.y}px`)
+                                                    .join(", ")})`,
+                                                backgroundColor: subregion.visible
+                                                    ? "rgba(0,255,0,0.3)"
+                                                    : "rgba(255,255,0,0.3)",
+                                            }}
+                                            onClick={() => {
+                                                setSelectedSubregion(subregion.region)
+                                            }}
+                                        ></button>
+                                    )
+                                })}
                         </main>
 
                         <WindowArea className="items-end right-0">
@@ -481,6 +515,62 @@ export default function DM() {
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+                            </Window>
+                            <Window
+                                open={selected_subregion_id !== undefined}
+                                onClose={() => setSelectedSubregion(undefined)}
+                                className="text-sm"
+                            >
+                                <h2 className="font-bold w-full text-center !text-base">
+                                    {selected_subregion_data?.name}
+                                </h2>
+                                <div className="flex justify-center gap-2 w-full items-center">
+                                    <ToggleableButton
+                                        onClick={() => {
+                                            if (selected_subregion_data) {
+                                                setSelectedRegionId(selected_subregion_data.id)
+                                                setSelectedSubregion(undefined)
+                                            }
+                                        }}
+                                        className="!px-2"
+                                    >
+                                        Visit
+                                    </ToggleableButton>
+                                    <ToggleableButton
+                                        selected={selected_world?.current_region == selected_subregion_data?.id}
+                                        onClick={() => {
+                                            console.log(selected_subregion_data)
+                                            if (selected_subregion_data) {
+                                                socket.emit("change_region", selected_subregion_data.id)
+                                            }
+                                        }}
+                                        className="!px-2"
+                                    >
+                                        <NearMe sx={{ fontSize: 16 }} />
+                                    </ToggleableButton>
+                                    <ToggleableButton
+                                        onClick={() => {
+                                            if (selected_subregion && selected_region) {
+                                                socket.emit("update_region", {
+                                                    ...selected_region,
+                                                    subregions: selected_region.subregions.map((s) =>
+                                                        s.region == selected_subregion.region
+                                                            ? { ...s, visible: !s.visible }
+                                                            : s
+                                                    ),
+                                                })
+                                            }
+                                        }}
+                                        selected={selected_subregion?.visible}
+                                        className="!px-2"
+                                    >
+                                        {selected_subregion?.visible ? (
+                                            <Visibility sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <VisibilityOff sx={{ fontSize: 16 }} />
+                                        )}
+                                    </ToggleableButton>
                                 </div>
                             </Window>
                         </WindowArea>
