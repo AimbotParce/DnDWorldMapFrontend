@@ -33,6 +33,8 @@ export default function Display() {
 
     const canvas_ref = useRef<HTMLDivElement>(null)
 
+    console.log("Region", region)
+
     const mapCoordsToCanvas = (x: number, y: number) => {
         if (!canvas_parameters || !region) {
             return { x: 0, y: 0 }
