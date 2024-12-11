@@ -399,7 +399,13 @@ export default function DM() {
                                         onSubmit={(e) => {
                                             e.preventDefault()
                                             const elements = e.currentTarget.elements
-                                            const { name, identifier } = elements
+                                            if (!("name" in elements) || !("identifier" in elements)) {
+                                                return
+                                            }
+                                            const { name, identifier } = elements as {
+                                                name: { value: string }
+                                                identifier: { value: string }
+                                            }
                                             if (!name.value || !identifier.value) {
                                                 return
                                             }
