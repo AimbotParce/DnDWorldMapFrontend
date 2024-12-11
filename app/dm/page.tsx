@@ -6,7 +6,9 @@ import Region from "@/types/region"
 import Species from "@/types/species"
 import World from "@/types/world"
 import {
+    Add,
     Close,
+    Done,
     Info,
     LocationDisabled,
     LocationSearching,
@@ -36,6 +38,8 @@ export default function DM() {
     const [win_region, setWinRegion] = useState<boolean>(true)
     const [win_creatures, setWinCreatures] = useState<boolean>(true)
     const [win_selected_region, setWinSelectedRegion] = useState<boolean>(true)
+    const [win_species, setWinSpecies] = useState<boolean>(true)
+    const [creating_species, setCreatingSpecies] = useState<string>()
 
     const [available_worlds, setAvailableWorlds] = useState<World[]>()
     const [selected_world_id, setSelectedWorldId] = useState<string>()
@@ -387,6 +391,87 @@ export default function DM() {
                                     ))}
                                 </ul>
                             </Window>
+                            <Window open={win_species} onClose={() => setWinSpecies(false)}>
+                                <h2 className="font-bold w-full text-center">Species</h2>
+                                {creating_species && (
+                                    <form
+                                        className="flex flex-col gap-2 text-sm"
+                                        onSubmit={(e) => {
+                                            e.preventDefault()
+                                            const elements = e.currentTarget.elements
+                                            const { name, identifier } = elements
+                                            if (!name.value || !identifier.value) {
+                                                return
+                                            }
+                                            // Check that the identifier doesn't already exist
+                                            if (creatures?.find((c) => c.id == (identifier.value as string))) {
+                                                return
+                                            }
+
+                                            socket.emit("update_creature", {
+                                                name: name.value as string,
+                                                current_state: "default",
+                                                species: creating_species,
+                                                position: [0, 0],
+                                                current_region: null,
+                                                visible: false,
+                                                id: identifier.value as string,
+                                            })
+                                            setCreatingSpecies(undefined)
+                                        }}
+                                    >
+                                        <label>
+                                            Creating{" "}
+                                            {species?.find((s) => s.id == creating_species)?.name ?? creating_species}
+                                        </label>
+
+                                        <div className="grid gap-2 grid-cols-[10fr_1fr]">
+                                            <input
+                                                type="text"
+                                                placeholder="Name"
+                                                name="name"
+                                                className="w-full px-3 py-1 rounded-full shadow-lg text-sm"
+                                            />
+                                            <button className="px-2 py-1 rounded-full shadow-lg bg-white" type="submit">
+                                                <Done sx={{ fontSize: 16 }} />
+                                            </button>
+                                            <input
+                                                type="text"
+                                                placeholder="Identifier"
+                                                name="identifier"
+                                                className="w-full px-3 py-1 rounded-full shadow-lg text-sm"
+                                            />
+                                            <button
+                                                className="px-2 py-1 rounded-full shadow-lg bg-white"
+                                                onClick={() => setCreatingSpecies(undefined)}
+                                                type="button"
+                                            >
+                                                <Close sx={{ fontSize: 16 }} />
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
+                                <ul className="flex flex-col gap-2">
+                                    {species?.map((spec) => (
+                                        <li
+                                            key={spec.id}
+                                            className="flex flex-row items-center justify-between gap-2 font-bold text-sm"
+                                        >
+                                            <p>{spec.name}</p>
+                                            <Tooltip title={`Create new ${spec.name}`}>
+                                                <ToggleableButton
+                                                    onClick={() => {
+                                                        setCreatingSpecies(spec.id)
+                                                    }}
+                                                    className="!px-2"
+                                                >
+                                                    <Add sx={{ fontSize: 16 }} />
+                                                </ToggleableButton>
+                                            </Tooltip>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Window>
                         </WindowArea>
 
                         <main className="overflow-hidden w-full h-full" ref={canvas_ref}>
@@ -568,18 +653,22 @@ export default function DM() {
                                 )}
                                 <p className="text-center text-gray-500">{selected_creature_species?.name}</p>
                                 <div className="flex justify-center gap-2 w-full items-center">
-                                    <Tooltip title="Peek at its location">
-                                        <ToggleableButton
-                                            onClick={() => {
-                                                setSelectedRegionId(selected_creature_region?.id)
-                                            }}
-                                            selected={selected_region_id == selected_creature_region?.id}
-                                            className="items-center flex gap-2 text-xs"
-                                        >
-                                            <Place sx={{ fontSize: 16 }} />
-                                            {selected_creature_region?.name}
-                                        </ToggleableButton>
-                                    </Tooltip>
+                                    {selected_creature?.current_region ? (
+                                        <Tooltip title="Peek at its location">
+                                            <ToggleableButton
+                                                onClick={() => {
+                                                    setSelectedRegionId(selected_creature_region?.id)
+                                                }}
+                                                selected={selected_region_id == selected_creature_region?.id}
+                                                className="items-center flex gap-2 text-xs"
+                                            >
+                                                <Place sx={{ fontSize: 16 }} />
+                                                {selected_creature_region?.name}
+                                            </ToggleableButton>
+                                        </Tooltip>
+                                    ) : (
+                                        <p>Not placed</p>
+                                    )}
                                     <Tooltip title={selected_creature?.visible ? "Hide creature" : "Show creature"}>
                                         <ToggleableButton
                                             onClick={() => {
