@@ -49,7 +49,7 @@ export default function DM() {
     const [species, setSpecies] = useState<Species[]>()
 
     const [selected_creature_id, setSelectedCreature] = useState<string>()
-    const [selected_subregion_id, setSelectedSubregion] = useState<string>()
+    const [selected_subregion_index, setSelectedSubregionIndex] = useState<number>()
 
     const [map_image_dimensions, setMapImageDimensions] = useState<{ width: number; height: number }>()
     const [canvas_parameters, setCanvasParameters] = useState<{
@@ -71,8 +71,8 @@ export default function DM() {
     const selected_creature_region = regions?.find((r) => r.id == selected_creature?.current_region)
     const selected_creature_species = species?.find((s) => s.id == selected_creature?.species)
 
-    const selected_subregion = selected_subregion_id
-        ? selected_region?.subregions.find((s) => s.region == selected_subregion_id)
+    const selected_subregion = selected_subregion_index
+        ? selected_region?.subregions[selected_subregion_index]
         : undefined
     const selected_subregion_data = selected_subregion
         ? regions?.find((r) => r.id == selected_subregion.region)
@@ -157,7 +157,7 @@ export default function DM() {
             setCreatures(undefined)
             setSpecies(undefined)
             setSelectedCreature(undefined)
-            setSelectedSubregion(undefined)
+            setSelectedSubregionIndex(undefined)
             setMapImageDimensions(undefined)
             setCanvasParameters(undefined)
         })
@@ -307,8 +307,7 @@ export default function DM() {
                                     <Place />
                                 </Tooltip>
                             </OpenWindow>
-                            <Window open={win_region} onClose={() => setWinRegion(false)}>
-                                <h2 className="font-bold w-full text-center">Regions</h2>
+                            <Window open={win_region} onClose={() => setWinRegion(false)} title="Regions">
                                 <ul className="flex flex-col gap-2">
                                     {regions?.map((region) => (
                                         <li key={region.id} className="flex flex-row justify-between gap-2">
@@ -316,7 +315,7 @@ export default function DM() {
                                                 <ToggleableButton
                                                     onClick={() => {
                                                         setSelectedRegionId(region.id)
-                                                        setSelectedSubregion(undefined)
+                                                        setSelectedSubregionIndex(undefined)
                                                     }}
                                                     selected={selected_region_id == region.id}
                                                 >
@@ -343,8 +342,7 @@ export default function DM() {
                                     <Pets />
                                 </Tooltip>
                             </OpenWindow>
-                            <Window open={win_creatures} onClose={() => setWinCreatures(false)}>
-                                <h2 className="font-bold w-full text-center">Creatures</h2>
+                            <Window open={win_creatures} onClose={() => setWinCreatures(false)} title="Creatures">
                                 <ul className="flex flex-col gap-2">
                                     {creatures?.map((creature) => (
                                         <li key={creature.id} className="flex flex-row justify-between gap-2">
@@ -391,8 +389,7 @@ export default function DM() {
                                     ))}
                                 </ul>
                             </Window>
-                            <Window open={win_species} onClose={() => setWinSpecies(false)}>
-                                <h2 className="font-bold w-full text-center">Species</h2>
+                            <Window open={win_species} onClose={() => setWinSpecies(false)} title="Species">
                                 {creating_species && (
                                     <form
                                         className="flex flex-col gap-2 text-sm"
@@ -574,7 +571,7 @@ export default function DM() {
                                                     : "rgba(255,255,0,0.3)",
                                             }}
                                             onClick={() => {
-                                                setSelectedSubregion(subregion.region)
+                                                setSelectedSubregionIndex(i)
                                             }}
                                         ></button>
                                     )
@@ -591,8 +588,8 @@ export default function DM() {
                                 open={selected_region_id !== undefined && win_selected_region}
                                 onClose={() => setWinSelectedRegion(false)}
                                 className="text-sm"
+                                title={selected_region?.name}
                             >
-                                <h2 className="font-bold w-full text-center !text-base">{selected_region?.name}</h2>
                                 <div className="flex justify-center gap-2 w-full items-center">
                                     <Tooltip title="Send Party to Region">
                                         <ToggleableButton
@@ -639,9 +636,8 @@ export default function DM() {
                                 open={selected_creature_id !== undefined}
                                 onClose={() => setSelectedCreature(undefined)}
                                 className="text-sm"
+                                title={selected_creature?.name}
                             >
-                                <h2 className="font-bold w-full text-center !text-base">{selected_creature?.name}</h2>
-
                                 {selected_creature && (
                                     <div className="w-full h-20 relative">
                                         <Image
@@ -719,20 +715,21 @@ export default function DM() {
                                 </div>
                             </Window>
                             <Window
-                                open={selected_subregion_id !== undefined}
-                                onClose={() => setSelectedSubregion(undefined)}
+                                open={selected_subregion_index !== undefined}
+                                onClose={() => setSelectedSubregionIndex(undefined)}
                                 className="text-sm"
+                                title={`[SUB] ${
+                                    selected_subregion_data ? selected_subregion_data.name : selected_subregion_index
+                                }`}
                             >
-                                <h2 className="font-bold w-full text-center !text-base">
-                                    [SUB] {selected_subregion_data?.name}
-                                </h2>
+                                <h2 className="font-bold w-full text-center !text-base"></h2>
                                 <div className="flex justify-center gap-2 w-full items-center">
                                     <Tooltip title="Peek at this subregion">
                                         <ToggleableButton
                                             onClick={() => {
                                                 if (selected_subregion_data) {
                                                     setSelectedRegionId(selected_subregion_data.id)
-                                                    setSelectedSubregion(undefined)
+                                                    setSelectedSubregionIndex(undefined)
                                                 }
                                             }}
                                             className="!px-2"
@@ -803,10 +800,12 @@ function Window({
     open,
     onClose,
     className,
+    title,
 }: {
     children: React.ReactNode
     open: boolean
     onClose: () => void
+    title?: string
     className?: string
 }) {
     if (!open) {
@@ -814,10 +813,11 @@ function Window({
     }
     return (
         <div
-            className={`bg-gray-200 shadow-lg flex flex-col gap-2 p-4 rounded-2xl w-full h-full relative ${className}`}
+            className={`bg-gray-200 shadow-lg flex flex-col gap-2 py-4 overflow-hidden rounded-2xl w-full h-full relative ${className}`}
         >
             <Close className="absolute top-3 right-3 cursor-pointer" onClick={onClose} />
-            {children}
+            {title && <h2 className="font-bold w-full text-center !text-base px-4">{title}</h2>}
+            <div className="w-full h-full overflow-x-hidden overflow-y-auto px-4">{children}</div>
         </div>
     )
 }
@@ -834,5 +834,9 @@ function OpenWindow({ show, onClick, children }: { show: boolean; onClick: () =>
 }
 
 function WindowArea({ children, className }: { children: React.ReactNode; className?: string }) {
-    return <div className={`absolute inset-y-0 w-64 z-10 p-4 gap-4 flex flex-col ${className}`}>{children}</div>
+    return (
+        <div className={`absolute inset-y-0 overflow-hidden w-64 z-10 p-4 gap-4 flex flex-col ${className}`}>
+            {children}
+        </div>
+    )
 }
