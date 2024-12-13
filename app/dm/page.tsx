@@ -61,22 +61,23 @@ export default function DM() {
 
     const canvas_ref = useRef<HTMLDivElement>(null)
 
-    const selected_world = selected_world_id ? available_worlds?.find((w) => w.id == selected_world_id) : undefined
-    const selected_region = selected_region_id ? regions?.find((r) => r.id == selected_region_id) : undefined
+    const selected_world =
+        selected_world_id !== undefined ? available_worlds?.find((w) => w.id == selected_world_id) : undefined
+    const selected_region =
+        selected_region_id !== undefined ? regions?.find((r) => r.id == selected_region_id) : undefined
     const present_creatures = creatures?.filter((c) => c.current_region == selected_region_id)
 
     const region_image = selected_region?.states[selected_region.current_state].image
 
-    const selected_creature = selected_creature_id ? creatures?.find((c) => c.id == selected_creature_id) : undefined
+    const selected_creature =
+        selected_creature_id !== undefined ? creatures?.find((c) => c.id == selected_creature_id) : undefined
     const selected_creature_region = regions?.find((r) => r.id == selected_creature?.current_region)
     const selected_creature_species = species?.find((s) => s.id == selected_creature?.species)
 
-    const selected_subregion = selected_subregion_index
-        ? selected_region?.subregions[selected_subregion_index]
-        : undefined
-    const selected_subregion_data = selected_subregion
-        ? regions?.find((r) => r.id == selected_subregion.region)
-        : undefined
+    const selected_subregion =
+        selected_subregion_index !== undefined ? selected_region?.subregions[selected_subregion_index] : undefined
+    const selected_subregion_data =
+        selected_subregion !== undefined ? regions?.find((r) => r.id == selected_subregion.region) : undefined
 
     const mapCoordsToCanvas = (x: number, y: number) => {
         if (!canvas_parameters || !region_image) {
@@ -567,8 +568,12 @@ export default function DM() {
                                                     .map((point) => `${point.x}px ${point.y}px`)
                                                     .join(", ")})`,
                                                 backgroundColor: subregion.visible
-                                                    ? "rgba(0,255,0,0.3)"
-                                                    : "rgba(255,255,0,0.3)",
+                                                    ? i == selected_subregion_index
+                                                        ? "rgba(0,255,128,0.4)"
+                                                        : "rgba(0,160,0,0.3)"
+                                                    : i == selected_subregion_index
+                                                    ? "rgba(255,128,0,0.4)"
+                                                    : "rgba(160,0,0,0.3)",
                                             }}
                                             onClick={() => {
                                                 setSelectedSubregionIndex(i)
@@ -754,11 +759,13 @@ export default function DM() {
                                     <Tooltip title={selected_subregion?.visible ? "Hide subregion" : "Show subregion"}>
                                         <ToggleableButton
                                             onClick={() => {
+                                                console.log("CLICK")
                                                 if (selected_subregion && selected_region) {
+                                                    console.log(selected_subregion_index)
                                                     socket.emit("update_region", {
                                                         ...selected_region,
-                                                        subregions: selected_region.subregions.map((s) =>
-                                                            s.region == selected_subregion.region
+                                                        subregions: selected_region.subregions.map((s, j) =>
+                                                            j == selected_subregion_index
                                                                 ? { ...s, visible: !s.visible }
                                                                 : s
                                                         ),
