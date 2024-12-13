@@ -167,7 +167,7 @@ export default function Display() {
                                 return (
                                     <div
                                         key={i}
-                                        className="absolute inset-0 cursor-pointer backdrop-blur-[1px] backdrop-filter"
+                                        className="absolute inset-0 cursor-pointer backdrop-blur-[1px] backdrop-filter z-[1]"
                                         style={{
                                             clipPath: `polygon(${subfog
                                                 .map((point) => {
@@ -225,7 +225,7 @@ export default function Display() {
                             />
                         ))}
                         <motion.div
-                            className="absolute inset-0 bg-white"
+                            className="absolute inset-0 bg-white z-[2]"
                             animate={{
                                 opacity: transitioning ? 1 : 0,
                             }}
