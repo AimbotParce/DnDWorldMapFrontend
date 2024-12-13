@@ -9,6 +9,7 @@ import {
     Add,
     Close,
     Done,
+    EmojiNature,
     Info,
     LocationDisabled,
     LocationSearching,
@@ -388,6 +389,12 @@ export default function DM() {
                                     ))}
                                 </ul>
                             </Window>
+
+                            <OpenWindow show={!win_species} onClick={() => setWinSpecies(true)}>
+                                <Tooltip title="Open species selection">
+                                    <EmojiNature />
+                                </Tooltip>
+                            </OpenWindow>
                             <Window open={win_species} onClose={() => setWinSpecies(false)} title="Species">
                                 {creating_species && (
                                     <form
